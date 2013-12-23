@@ -4,11 +4,11 @@ import com.ouc.tcp.message.TCP_PACKET;
 
 public class CheckSum {
 	
-	/*¼ÆËãTCP±¨ÎÄ¶ÎĞ£ÑéºÍ£ºÖ»ĞèĞ£ÑéTCPÊ×²¿ÖĞµÄseq¡¢ackºÍsum£¬ÒÔ¼°TCPÊı¾İ×Ö¶Î*/
+	/*è®¡ç®—TCPæŠ¥æ–‡æ®µæ ¡éªŒå’Œï¼šåªéœ€æ ¡éªŒTCPé¦–éƒ¨ä¸­çš„seqã€ackå’Œsumï¼Œä»¥åŠTCPæ•°æ®å­—æ®µ*/
 	public static short computeChkSum(TCP_PACKET tcpPack) {
 		int checkSum = 0;
 		
-		//¼ÆËãĞ£ÑéºÍ
+		//è®¡ç®—æ ¡éªŒå’Œ
 		
 		return (short) checkSum;
 	}

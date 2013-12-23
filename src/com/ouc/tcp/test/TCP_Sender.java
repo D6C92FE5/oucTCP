@@ -6,47 +6,47 @@ import com.ouc.tcp.tool.TCP_TOOL;
 
 public class TCP_Sender extends TCP_Sender_ADT {
 	
-	private TCP_PACKET tcpPack;	//´ı·¢ËÍµÄTCPÊı¾İ±¨
+	private TCP_PACKET tcpPack;	//å¾…å‘é€çš„TCPæ•°æ®æŠ¥
 	
-	/*¹¹Ôìº¯Êı*/
+	/*æ„é€ å‡½æ•°*/
 	public TCP_Sender() {
-		super();	//µ÷ÓÃ³¬Àà¹¹Ôìº¯Êı
-		super.initTCP_Sender(this);	//³õÊ¼»¯TCP·¢ËÍ¶Ë
+		super();	//è°ƒç”¨è¶…ç±»æ„é€ å‡½æ•°
+		super.initTCP_Sender(this);	//åˆå§‹åŒ–TCPå‘é€ç«¯
 	}
 	
 	@Override
-	//¿É¿¿·¢ËÍ£¨Ó¦ÓÃ²ãµ÷ÓÃ£©£º·â×°Ó¦ÓÃ²ãÊı¾İ£¬²úÉúTCPÊı¾İ±¨
+	//å¯é å‘é€ï¼ˆåº”ç”¨å±‚è°ƒç”¨ï¼‰ï¼šå°è£…åº”ç”¨å±‚æ•°æ®ï¼Œäº§ç”ŸTCPæ•°æ®æŠ¥
 	public void rdt_send(int dataIndex, int[] appData) {
 		
-		//Éú³ÉTCPÊı¾İ±¨£¨ÉèÖÃĞòºÅºÍÊı¾İ×Ö¶Î£©
+		//ç”ŸæˆTCPæ•°æ®æŠ¥ï¼ˆè®¾ç½®åºå·å’Œæ•°æ®å­—æ®µï¼‰
 		tcpH.setTh_seq(dataIndex * appData.length + 1);
 		tcpS.setData(appData);
 		tcpPack = new TCP_PACKET(tcpH, tcpS, destinAddr);
 		
-		//·¢ËÍTCPÊı¾İ±¨
+		//å‘é€TCPæ•°æ®æŠ¥
 		udt_send(tcpPack);
 		
-		//µÈ´ıACK±¨ÎÄ
+		//ç­‰å¾…ACKæŠ¥æ–‡
 		waitACK();
 		
 	}
 	
 	@Override
-	//²»¿É¿¿·¢ËÍ£º½«´ò°üºÃµÄTCPÊı¾İ±¨Í¨¹ı²»¿É¿¿´«ÊäĞÅµÀ·¢ËÍ
+	//ä¸å¯é å‘é€ï¼šå°†æ‰“åŒ…å¥½çš„TCPæ•°æ®æŠ¥é€šè¿‡ä¸å¯é ä¼ è¾“ä¿¡é“å‘é€
 	public void udt_send(TCP_PACKET tcpPack) {
 		
-		//ÉèÖÃ´íÎó¿ØÖÆ±êÖ¾
-		tcpH.setTh_eflag((byte)0);	//eFlag=0£¬ĞÅµÀÎŞ´íÎó
+		//è®¾ç½®é”™è¯¯æ§åˆ¶æ ‡å¿—
+		tcpH.setTh_eflag((byte)0);	//eFlag=0ï¼Œä¿¡é“æ— é”™è¯¯
 		
-		//·¢ËÍÊı¾İ±¨
+		//å‘é€æ•°æ®æŠ¥
 		client.send(tcpPack);
 		
 	}
 	
 	@Override
-	//µÈ´ıÆÚÍûµÄACK±¨ÎÄ
+	//ç­‰å¾…æœŸæœ›çš„ACKæŠ¥æ–‡
 	public void waitACK() {
-		//Ñ­»·¼ì²éÈ·ÈÏºÅ¶ÔÁĞÖĞÊÇ·ñÓĞĞÂÊÕµ½µÄACK
+		//å¾ªç¯æ£€æŸ¥ç¡®è®¤å·å¯¹åˆ—ä¸­æ˜¯å¦æœ‰æ–°æ”¶åˆ°çš„ACK
 		while(true) {
 			if(!ackQueue.isEmpty() && ackQueue.poll() == tcpPack.getTcpH().getTh_seq()) {
 				break;
@@ -55,7 +55,7 @@ public class TCP_Sender extends TCP_Sender_ADT {
 	}
 
 	@Override
-	//½ÓÊÕµ½ACK±¨ÎÄ£º½«È·ÈÏºÅ²åÈëack¶ÓÁĞ
+	//æ¥æ”¶åˆ°ACKæŠ¥æ–‡ï¼šå°†ç¡®è®¤å·æ’å…¥acké˜Ÿåˆ—
 	public void recv(TCP_PACKET recvPack) {
 		ackQueue.add(recvPack.getTcpH().getTh_ack());
 		System.out.println();

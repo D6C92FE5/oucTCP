@@ -11,28 +11,28 @@ import com.ouc.tcp.tool.TCP_TOOL;
 
 public class TCP_Receiver extends TCP_Receiver_ADT {
 	
-	private TCP_PACKET ackPack;	//»Ø¸´µÄACK±¨ÎÄ¶Î
+	private TCP_PACKET ackPack;	//å›å¤çš„ACKæŠ¥æ–‡æ®µ
 	
-	/*¹¹Ôìº¯Êı*/
+	/*æ„é€ å‡½æ•°*/
 	public TCP_Receiver() {
-		super();	//µ÷ÓÃ³¬Àà¹¹Ôìº¯Êı
-		super.initTCP_Receiver(this);	//³õÊ¼»¯TCP½ÓÊÕ¶Ë
+		super();	//è°ƒç”¨è¶…ç±»æ„é€ å‡½æ•°
+		super.initTCP_Receiver(this);	//åˆå§‹åŒ–TCPæ¥æ”¶ç«¯
 	}
 
 	@Override
-	//½ÓÊÕµ½Êı¾İ±¨£ºÉèÖÃ»Ø¸´µÄACK±¨ÎÄ¶Î
+	//æ¥æ”¶åˆ°æ•°æ®æŠ¥ï¼šè®¾ç½®å›å¤çš„ACKæŠ¥æ–‡æ®µ
 	public void rdt_recv(TCP_PACKET recvPack) {
-		//Éú³ÉACK±¨ÎÄ¶Î£¨ÉèÖÃÈ·ÈÏºÅ£©
+		//ç”ŸæˆACKæŠ¥æ–‡æ®µï¼ˆè®¾ç½®ç¡®è®¤å·ï¼‰
 		tcpH.setTh_ack(recvPack.getTcpH().getTh_seq());
 		ackPack = new TCP_PACKET(tcpH, tcpS, recvPack.getSourceAddr());
 		
-		//»Ø¸´ACK±¨ÎÄ¶Î
+		//å›å¤ACKæŠ¥æ–‡æ®µ
 		reply(ackPack);
 		
-		//½«½ÓÊÕµ½µÄÕıÈ·ÓĞĞòµÄÊı¾İ²åÈëdata¶ÓÁĞ£¬×¼±¸½»¸¶
+		//å°†æ¥æ”¶åˆ°çš„æ­£ç¡®æœ‰åºçš„æ•°æ®æ’å…¥dataé˜Ÿåˆ—ï¼Œå‡†å¤‡äº¤ä»˜
 		dataQueue.add(recvPack.getTcpS().getData());
 		
-		//½»¸¶Êı¾İ£¨Ã¿20×éÊı¾İ½»¸¶Ò»´Î£©
+		//äº¤ä»˜æ•°æ®ï¼ˆæ¯20ç»„æ•°æ®äº¤ä»˜ä¸€æ¬¡ï¼‰
 		if(dataQueue.size() == 20) {
 			deliver_data();
 		}
@@ -41,7 +41,7 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 	}
 
 	@Override
-	//½»¸¶Êı¾İ£¨½«½ÓÊÕµ½µÄÕıÈ·ÓĞĞòµÄÊı¾İĞ´ÈëÎÄ¼ş£©
+	//äº¤ä»˜æ•°æ®ï¼ˆå°†æ¥æ”¶åˆ°çš„æ­£ç¡®æœ‰åºçš„æ•°æ®å†™å…¥æ–‡ä»¶ï¼‰
 	public void deliver_data() {	
 		File fw = new File("recvData.txt");
 		BufferedWriter writer;
@@ -49,16 +49,16 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 		try {
 			writer = new BufferedWriter(new FileWriter(fw, true));
 			
-			//Ñ­»·¼ì²édata¶ÓÁĞÖĞÊÇ·ñÓĞĞÂ½»¸¶Êı¾İ
+			//å¾ªç¯æ£€æŸ¥dataé˜Ÿåˆ—ä¸­æ˜¯å¦æœ‰æ–°äº¤ä»˜æ•°æ®
 			while(!dataQueue.isEmpty()) {
 				int[] data = dataQueue.poll();
 				
-				//½«Êı¾İĞ´ÈëÎÄ¼ş
+				//å°†æ•°æ®å†™å…¥æ–‡ä»¶
 				for(int i = 0; i < data.length; i++) {
 					writer.write(data[i] + "\n");
 				}
 				
-				writer.flush();		//Çå¿ÕÊä³ö»º´æ
+				writer.flush();		//æ¸…ç©ºè¾“å‡ºç¼“å­˜
 			}
 			
 			writer.close();
@@ -69,12 +69,12 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 	}
 
 	@Override
-	//»Ø¸´ACK±¨ÎÄ¶Î
+	//å›å¤ACKæŠ¥æ–‡æ®µ
 	public void reply(TCP_PACKET replyPack) {
-		//ÉèÖÃ´íÎó¿ØÖÆ±êÖ¾
-		tcpH.setTh_eflag((byte)0);	//eFlag=0£¬ĞÅµÀÎŞ´íÎó
+		//è®¾ç½®é”™è¯¯æ§åˆ¶æ ‡å¿—
+		tcpH.setTh_eflag((byte)0);	//eFlag=0ï¼Œä¿¡é“æ— é”™è¯¯
 		
-		//·¢ËÍÊı¾İ±¨
+		//å‘é€æ•°æ®æŠ¥
 		client.send(replyPack);		
 	}
 	
