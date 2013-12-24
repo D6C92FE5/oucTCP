@@ -12,6 +12,7 @@ import com.ouc.tcp.tool.TCP_TOOL;
 public class TCP_Receiver extends TCP_Receiver_ADT {
 	
 	private TCP_PACKET ackPack;	//回复的ACK报文段
+	private int expectedSeq = 1; //期望收到的报文段号
 	
 	/*构造函数*/
 	public TCP_Receiver() {
@@ -26,11 +27,19 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 		tcpH.setTh_ack(recvPack.getTcpH().getTh_seq());
 		ackPack = new TCP_PACKET(tcpH, tcpS, recvPack.getSourceAddr());
 		
+		//出错丢弃
+		if(CheckSum.computeChkSum(recvPack) != recvPack.getTcpH().getTh_sum()) {
+			return;
+		}
+
 		//回复ACK报文段
 		reply(ackPack);
 		
 		//将接收到的正确有序的数据插入data队列，准备交付
-		dataQueue.add(recvPack.getTcpS().getData());
+		if(recvPack.getTcpH().getTh_seq() == expectedSeq) {
+			expectedSeq += recvPack.getTcpS().getData().length;
+			dataQueue.add(recvPack.getTcpS().getData());
+		}
 		
 		//交付数据（每20组数据交付一次）
 		if(dataQueue.size() == 20) {
@@ -72,7 +81,7 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 	//回复ACK报文段
 	public void reply(TCP_PACKET replyPack) {
 		//设置错误控制标志
-		tcpH.setTh_eflag((byte)0);	//eFlag=0，信道无错误
+		tcpH.setTh_eflag((byte)7);	//eFlag=0，信道无错误
 		
 		//发送数据报
 		client.send(replyPack);		

@@ -1,6 +1,8 @@
 package com.ouc.tcp.test;
 
 import com.ouc.tcp.client.TCP_Sender_ADT;
+import com.ouc.tcp.client.UDT_Timer;
+import com.ouc.tcp.client.UDT_RetransTask;
 import com.ouc.tcp.message.*;
 import com.ouc.tcp.tool.TCP_TOOL;
 
@@ -22,6 +24,7 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		tcpH.setTh_seq(dataIndex * appData.length + 1);
 		tcpS.setData(appData);
 		tcpPack = new TCP_PACKET(tcpH, tcpS, destinAddr);
+		tcpH.setTh_sum(CheckSum.computeChkSum(tcpPack));
 		
 		//发送TCP数据报
 		udt_send(tcpPack);
@@ -36,7 +39,7 @@ public class TCP_Sender extends TCP_Sender_ADT {
 	public void udt_send(TCP_PACKET tcpPack) {
 		
 		//设置错误控制标志
-		tcpH.setTh_eflag((byte)0);	//eFlag=0，信道无错误
+		tcpH.setTh_eflag((byte)7);	//eFlag=0，信道无错误
 		
 		//发送数据报
 		client.send(tcpPack);
@@ -47,8 +50,13 @@ public class TCP_Sender extends TCP_Sender_ADT {
 	//等待期望的ACK报文
 	public void waitACK() {
 		//循环检查确认号对列中是否有新收到的ACK
+		UDT_Timer timer = new UDT_Timer();
+		UDT_RetransTask task = new UDT_RetransTask(client, tcpPack);
+		timer.schedule(task, 1000, 1000);
 		while(true) {
-			if(!ackQueue.isEmpty() && ackQueue.poll() == tcpPack.getTcpH().getTh_seq()) {
+			if(ackQueue.contains(tcpPack.getTcpH().getTh_seq())) {
+				timer.cancel();
+				ackQueue.clear();
 				break;
 			}
 		}
