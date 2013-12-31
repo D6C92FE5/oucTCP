@@ -10,7 +10,7 @@ import com.ouc.tcp.message.*;
 public class TCP_Sender extends TCP_Sender_ADT {
 	
 	private TCP_PACKET tcpPack;	//待发送的TCP数据报
-	private TCP_Window tcpWindow = new TCP_Window(5); //TCP窗口
+	private TCP_Window tcpWindow = new TCP_Window(); //TCP窗口
 
 	private int waitTime = 100; //重发等待时间
 
@@ -98,8 +98,13 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		while(!tcpWindow.isEmpty() && !isTimeout) ;
 		udtTimer.cancel();
 
-		//窗口可能完全没有滑动
-		sendPacketsWhenNeedThenWaitACK();
+		if (isTimeout) {
+			//发生了拥塞
+			tcpWindow.congestionOccurred();
+
+			//窗口可能完全没有滑动
+			sendPacketsWhenNeedThenWaitACK();
+		}
 	}
 
 	@Override
