@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 
 import com.ouc.tcp.client.TCP_Receiver_ADT;
 import com.ouc.tcp.message.*;
@@ -12,6 +13,7 @@ import com.ouc.tcp.tool.TCP_TOOL;
 public class TCP_Receiver extends TCP_Receiver_ADT {
 	
 	private TCP_PACKET ackPack;	//回复的ACK报文段
+	private HashMap<Integer, TCP_PACKET> packets = new HashMap<Integer, TCP_PACKET>();
 	private int expectedSeq = 1; //期望收到的报文段号
 	
 	/*构造函数*/
@@ -23,22 +25,25 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 	@Override
 	//接收到数据报：设置回复的ACK报文段
 	public void rdt_recv(TCP_PACKET recvPack) {
-		//生成ACK报文段（设置确认号）
-		tcpH.setTh_ack(recvPack.getTcpH().getTh_seq());
-		ackPack = new TCP_PACKET(tcpH, tcpS, recvPack.getSourceAddr());
-		
 		//出错丢弃
 		if(CheckSum.computeChkSum(recvPack) != recvPack.getTcpH().getTh_sum()) {
 			return;
 		}
 
+		//生成ACK报文段（设置确认号）
+		tcpH.setTh_ack(recvPack.getTcpH().getTh_seq());
+		ackPack = new TCP_PACKET(tcpH, tcpS, recvPack.getSourceAddr());
+		
 		//回复ACK报文段
 		reply(ackPack);
 		
 		//将接收到的正确有序的数据插入data队列，准备交付
-		if(recvPack.getTcpH().getTh_seq() == expectedSeq) {
-			expectedSeq += recvPack.getTcpS().getData().length;
-			dataQueue.add(recvPack.getTcpS().getData());
+		packets.put(recvPack.getTcpH().getTh_seq(), recvPack);
+		System.out.println("! " + packets.size() + " " + expectedSeq);
+		while(packets.containsKey(expectedSeq)) {
+			TCP_PACKET packet = packets.remove(expectedSeq);
+			expectedSeq += packet.getTcpS().getData().length;
+			dataQueue.add(packet.getTcpS().getData());
 		}
 		
 		//交付数据（每20组数据交付一次）
