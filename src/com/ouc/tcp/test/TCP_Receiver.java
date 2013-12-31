@@ -13,7 +13,7 @@ import com.ouc.tcp.tool.TCP_TOOL;
 public class TCP_Receiver extends TCP_Receiver_ADT {
 	
 	private TCP_PACKET ackPack;	//回复的ACK报文段
-	private HashMap<Integer, TCP_PACKET> packets = new HashMap<Integer, TCP_PACKET>();
+	private HashMap<Integer, TCP_PACKET> packets = new HashMap<Integer, TCP_PACKET>(); //收到的包们
 	private int expectedSeq = 1; //期望收到的报文段号
 	
 	/*构造函数*/
@@ -31,16 +31,20 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 		}
 
 		//生成ACK报文段（设置确认号）
-		tcpH.setTh_ack(recvPack.getTcpH().getTh_seq());
+		int recvSeq = recvPack.getTcpH().getTh_seq();
+		tcpH.setTh_ack(recvSeq);
 		ackPack = new TCP_PACKET(tcpH, tcpS, recvPack.getSourceAddr());
 		
 		//回复ACK报文段
 		reply(ackPack);
 		
-		//将接收到的正确有序的数据插入data队列，准备交付
-		packets.put(recvPack.getTcpH().getTh_seq(), recvPack);
-		System.out.println("! " + packets.size() + " " + expectedSeq);
-		while(packets.containsKey(expectedSeq)) {
+		//如果需要这个包就把它留下来
+		if (recvSeq >= expectedSeq && !packets.containsKey(recvSeq)) {
+			packets.put(recvSeq, recvPack);
+		}
+
+		//将接收到的数据有序地插入data队列，准备交付，注意不可以使data队列中的长度超过20
+		while(packets.containsKey(expectedSeq) && dataQueue.size() < 20) {
 			TCP_PACKET packet = packets.remove(expectedSeq);
 			expectedSeq += packet.getTcpS().getData().length;
 			dataQueue.add(packet.getTcpS().getData());

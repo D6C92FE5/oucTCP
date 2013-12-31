@@ -1,5 +1,6 @@
 package com.ouc.tcp.test;
 
+import java.util.Timer;
 import java.util.TimerTask;
 
 import com.ouc.tcp.client.TCP_Sender_ADT;
@@ -12,12 +13,22 @@ public class TCP_Sender extends TCP_Sender_ADT {
 	private TCP_Window tcpWindow = new TCP_Window(5); //TCP窗口
 
 	private int waitTime = 100; //重发等待时间
-	private volatile boolean isTimeout = false; //是否等待超时
 
+	private volatile boolean isTimeout = false; //是否等待ACK超时
 	private class TimeoutTask extends TimerTask {
 		@Override
 		public void run() {
 			isTimeout = true;
+		}
+	}
+
+	private volatile boolean isNoMorePacket = false; //是否不再有新的包了
+	private Timer noMorePacketTimer = new Timer();
+	private class NoMorePacketTask extends TimerTask {
+		@Override
+		public void run() {
+			isNoMorePacket = true;
+			sendPacketsWhenNeedThenWaitACK();
 		}
 	}
 
@@ -27,8 +38,10 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		super.initTCP_Sender(this);	//初始化TCP发送端
 	}
 	
-	private void sendPacketsIfWindowFullThenWaitACK() {
-		if(tcpWindow.isFull()) {
+	//在应当发包的时候发送包并等待ACK
+	private void sendPacketsWhenNeedThenWaitACK() {
+		//窗口满了或者不再有新的包的时候就发送现有的包们
+		if(tcpWindow.isFull() || (isNoMorePacket && !tcpWindow.isEmpty())) {
 			//发送TCP数据报
 			for(int i : tcpWindow) {
 				udt_send(tcpWindow.getPacket(i));
@@ -41,6 +54,9 @@ public class TCP_Sender extends TCP_Sender_ADT {
 	@Override
 	//可靠发送（应用层调用）：封装应用层数据，产生TCP数据报
 	public void rdt_send(int dataIndex, int[] appData) {
+		//还有新的包
+		noMorePacketTimer.cancel();
+		noMorePacketTimer = new Timer();
 		
 		//生成TCP数据报（设置序号和数据字段）
 		tcpH = new TCP_HEADER();
@@ -50,9 +66,14 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		tcpPack = new TCP_PACKET(tcpH, tcpS, destinAddr);
 		tcpH.setTh_sum(CheckSum.computeChkSum(tcpPack));
 
+		//把包放入TCP窗口
 		tcpWindow.queuePacket(tcpPack);
 
-		sendPacketsIfWindowFullThenWaitACK();
+		//发送窗口中的包
+		sendPacketsWhenNeedThenWaitACK();
+
+		//可能不会再有新的包了
+		noMorePacketTimer.schedule(new NoMorePacketTask(), waitTime);
 	}
 	
 	@Override
@@ -78,7 +99,7 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		udtTimer.cancel();
 
 		//窗口可能完全没有滑动
-		sendPacketsIfWindowFullThenWaitACK();
+		sendPacketsWhenNeedThenWaitACK();
 	}
 
 	@Override
