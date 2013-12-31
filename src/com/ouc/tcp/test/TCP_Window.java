@@ -14,7 +14,6 @@ public class TCP_Window implements Iterable<Integer> {
 	private int nextIndex = 0;
 
 	public void queuePacket(TCP_PACKET tcpPack) {
-		System.out.println(length + " " + ssthresh);
 		packets.put(nextIndex, tcpPack);
 		nextIndex += 1;
 	}
