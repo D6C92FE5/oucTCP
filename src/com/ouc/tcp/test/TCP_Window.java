@@ -10,6 +10,7 @@ public class TCP_Window implements Iterable<Integer> {
 	private ConcurrentSkipListMap<Integer, TCP_PACKET> packets = new ConcurrentSkipListMap<Integer, TCP_PACKET>();
 
 	private int length;
+	private int nextIndex = 0;
 
 	public TCP_Window(int length) {
 		this.length = length;
@@ -17,8 +18,8 @@ public class TCP_Window implements Iterable<Integer> {
 
 	public void queuePacket(TCP_PACKET tcpPack) {
 		assert !isFull();
-		int index = isEmpty() ? 0 : packets.lastKey() + 1;
-		packets.put(index, tcpPack);
+		packets.put(nextIndex, tcpPack);
+		nextIndex += 1;
 	}
 
 	public void receiveACK(int ack) {
@@ -34,7 +35,7 @@ public class TCP_Window implements Iterable<Integer> {
 	}
 
 	public boolean isFull() {
-		return !isEmpty() && (packets.lastKey() - packets.firstKey()) == length - 1;
+		return !isEmpty() && (nextIndex - packets.firstKey()) == length;
 	}
 
 	public Iterator<Integer> iterator() {
