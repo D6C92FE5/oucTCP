@@ -13,7 +13,8 @@ import com.ouc.tcp.tool.TCP_TOOL;
 public class TCP_Receiver extends TCP_Receiver_ADT {
 	
 	private TCP_PACKET ackPack;	//回复的ACK报文段
-	private HashMap<Integer, TCP_PACKET> packets = new HashMap<Integer, TCP_PACKET>(); //收到的包们
+	private HashMap<Integer, TCP_PACKET> packets = //收到的包们
+			new HashMap<Integer, TCP_PACKET>();
 	private int expectedSeq = 1; //期望收到的报文段号
 	
 	/*构造函数*/
