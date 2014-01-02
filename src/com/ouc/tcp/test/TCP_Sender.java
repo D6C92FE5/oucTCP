@@ -41,7 +41,7 @@ public class TCP_Sender extends TCP_Sender_ADT {
 	//在应当发包的时候发送包并等待ACK
 	private void sendPacketsWhenNeedThenWaitACK() {
 		//窗口满了或者不再有新的包的时候就发送现有的包们
-		if(tcpWindow.isFull() || (isNoMorePacket && !tcpWindow.isEmpty())) {
+		while(tcpWindow.isFull() || (isNoMorePacket && !tcpWindow.isEmpty())) {
 			//发送TCP数据报
 			for(int i : tcpWindow) {
 				udt_send(tcpWindow.getPacket(i));
@@ -55,6 +55,7 @@ public class TCP_Sender extends TCP_Sender_ADT {
 	//可靠发送（应用层调用）：封装应用层数据，产生TCP数据报
 	public void rdt_send(int dataIndex, int[] appData) {
 		//还有新的包
+		isNoMorePacket = false;
 		noMorePacketTimer.cancel();
 		noMorePacketTimer = new Timer();
 		
@@ -101,9 +102,6 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		if (isTimeout) {
 			//发生了拥塞
 			tcpWindow.congestionOccurred();
-
-			//窗口可能完全没有滑动
-			sendPacketsWhenNeedThenWaitACK();
 		}
 	}
 
